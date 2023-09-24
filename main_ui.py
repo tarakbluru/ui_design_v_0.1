@@ -5,7 +5,7 @@ import datetime  # Added datetime module for timestamp
 layout = [
     [sg.TabGroup([
         [sg.Tab('NIFTY', [
-            [sg.Text('Select Option:')],
+            [sg.Text('Select Undelying Instrument:')],
             [sg.Combo(['NIFTY-I', 'NIFTY_INDEX'], key='-NIFTY-OPTION-', enable_events=True, size=(20, 1))],
             [sg.Text('Select ATM:')],
             [sg.Combo(['ATM-5', 'ATM-4', 'ATM-3', 'ATM-2', 'ATM-1', 'ATM', 'ATM+1', 'ATM+2', 'ATM+3', 'ATM+4', 'ATM+5'], key='-NIFTY-ATM-', size=(20, 1), enable_events=True)],
@@ -20,7 +20,7 @@ layout = [
             [sg.Text('', size=(100, 1))]
         ])],
         [sg.Tab('Bank Nifty', [
-            [sg.Text('Select Option:')],
+            [sg.Text('Select Undelying Instrument:')],
             [sg.Combo(['BANKNIFTY-I', 'BANKNIFTY_INDEX'], key='-BANKNIFTY-OPTION-', enable_events=True, size=(20, 1))],
             [sg.Text('Select ATM:')],
             [sg.Combo(['ATM-5', 'ATM-4', 'ATM-3', 'ATM-2', 'ATM-1', 'ATM', 'ATM+1', 'ATM+2', 'ATM+3', 'ATM+4', 'ATM+5'], key='-BANKNIFTY-ATM-', size=(20, 1), enable_events=True)],

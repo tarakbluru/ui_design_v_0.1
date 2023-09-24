@@ -5,16 +5,44 @@ import datetime  # Added datetime module for timestamp
 layout = [
     [sg.TabGroup([
         [sg.Tab('NIFTY', [
-            [sg.Text('Select Undelying Instrument:')],
-            [sg.Combo(['NIFTY-I', 'NIFTY_INDEX'], key='-NIFTY-OPTION-', enable_events=True, size=(20, 1))],
-            [sg.Text('Select ATM:')],
-            [sg.Combo(['ATM-5', 'ATM-4', 'ATM-3', 'ATM-2', 'ATM-1', 'ATM', 'ATM+1', 'ATM+2', 'ATM+3', 'ATM+4', 'ATM+5'], key='-NIFTY-ATM-', size=(20, 1), enable_events=True)],
+            # Section 1: Configuration
+            [sg.Text('Configuration', font=('Helvetica', 14), relief=sg.RELIEF_RIDGE)],
+            [sg.Text('Select Undelying Instrument:', size=40),  sg.Text('Mode:', size=40, justification='left'), sg.Text('Expiry:', size=40, justification='left')],
+            [sg.Combo(['NIFTY-I', 'NIFTY_INDEX'], key='-NIFTY-OPTION-', default_value='NIFTY-I', enable_events=True, size=(40, 1)), sg.Combo(['MIS', 'NRML'], key='-NIFTY-MODE-', default_value='MIS', enable_events=True, size=(40, 1)), sg.CalendarButton('Pick a Date', target='-NIFTY-DATE-', format='%d/%m/%Y', pad=(10, 10)), sg.InputText('', key='-NIFTY-DATE-', size=(20, 1), enable_events=True)],
+            [sg.Text('Select ATM:', size=40), sg.Text('Select Broker:',size=40)],
+            [sg.Combo(['ATM-5', 'ATM-4', 'ATM-3', 'ATM-2', 'ATM-1', 'ATM', 'ATM+1', 'ATM+2', 'ATM+3', 'ATM+4', 'ATM+5'], key='-NIFTY-ATM-', default_value='ATM', size=(40, 1), enable_events=True),
+             sg.Combo(['FINVASIA', 'ZERODHA'], key='-BROKER-OPTION-', default_value='FINVASIA', enable_events=True, size=(40, 1))],
+
+            [sg.Text('Target Ratios:', size=40)],
+            [sg.Combo(['0:0:3', '0:3:0','3:0:0', '1:1:1', '1:2:0', '2:1:0', '0:1:2', '0:2:1'], key='-NIFTY-TARGET_RATIO-', default_value='1:1:1', enable_events=True, size=(40, 1))],
+             
+            # Section 2: Entry / Target / SL Levels
+            [sg.Text('Levels', font=('Helvetica', 14), relief=sg.RELIEF_RIDGE)],
+
+            [sg.Text('NIFTY Long Entry Level:',size=40), sg.Text('NIFTY Short Entry Level:')], 
+            [sg.InputText('', key='-NIFTY-BUY-LEVEL-'), sg.InputText('', key='-NIFTY-SHORT-LEVEL-')],
+
+            [sg.Text('NIFTY Long Target1 Level:',size=40), sg.Text('NIFTY Short Target1 Level:')], 
+            [sg.InputText('', key='-NIFTY-LONG-TARGET1-LEVEL-'), sg.InputText('', key='-NIFTY-SHORT-TARGET1-LEVEL-')],
+
+            [sg.Text('NIFTY Long Target2 Level:',size=40), sg.Text('NIFTY Short Target2 Level:')], 
+            [sg.InputText('', key='-NIFTY-LONG-TARGET1-LEVEL-'), sg.InputText('', key='-NIFTY-SHORT-TARGET1-LEVEL-')],
+
+            [sg.Text('NIFTY Long Target3 Level:',size=40), sg.Text('NIFTY Short Target3 Level:')], 
+            [sg.InputText('', key='-NIFTY-LONG-TARGET1-LEVEL-'), sg.InputText('', key='-NIFTY-SHORT-TARGET1-LEVEL-')],
+
+            [sg.Text('NIFTY Long SL Level:',size=40), sg.Text('NIFTY Short SL Level:')], 
+            [sg.InputText('', key='-NIFTY-LONG-SL-LEVEL-'), sg.InputText('', key='-NIFTY-SHORT-SL-LEVEL-')],
+
+            # Section 3: Trading Info
+            [sg.Text('Trading Info', font=('Helvetica', 14), relief=sg.RELIEF_RIDGE)],
             [sg.Text('Qty in Lots:')],
             [sg.InputText('', key='-NIFTY-QTY-')],
             [sg.Text('Max Loss:')],
             [sg.InputText('', key='-NIFTY-MAX-LOSS-')],
             [sg.Text('Max Profit:')],
             [sg.InputText('', key='-NIFTY-MAX-PROFIT-')],
+            [sg.Text('', size=(100, 1))],
             [sg.Button('NIFTY CE BUY  \u2191', button_color=('white', 'green')),  sg.Button('NIFTY CE SELL \u2193', button_color=('white', 'red'))],  # CE buttons with up and down arrows
             [sg.Button('NIFTY PE SELL \u2191', button_color=('white', 'green')),  sg.Button('NIFTY PE BUY  \u2193', button_color=('white', 'red')) ],  # PE buttons with up and down arrows
             [sg.Text('', size=(100, 1))]
@@ -39,12 +67,12 @@ layout = [
     ])],
     [sg.Text('', size=(100, 1))],
     [sg.Text('Logger Window:')],
-    [sg.Multiline('', key='-LOGGER-', size=(115, 10))],  # Logger window with a larger size
+    [sg.Multiline('', key='-LOGGER-', size=(115, 5))],  # Logger window with a larger size
     [sg.Button('Exit', size=(10, 1))]  # Exit button at the lowest row
 ]
 
 # Create the window
-window = sg.Window('QuickTrade : ', layout, finalize=True)
+window = sg.Window('::QuickTrade Ver 0.1::', layout, finalize=True)
 
 window['-NIFTY-QTY-'].bind("<FocusIn>", "_NIFTY-FOCUS_IN_QTY")
 window['-NIFTY-QTY-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_QTY")
@@ -76,6 +104,16 @@ prev_banknifty_qty = None  # Initialize as None
 prev_banknifty_max_loss = None  # Initialize as None
 prev_banknifty_max_profit = None  # Initialize as None
 
+# Function to format a date with the day of the week
+def format_date_with_day(date_str):
+    try:
+        date = datetime.datetime.strptime(date_str, '%d/%m/%Y')
+        formatted_date = date.strftime('%A, %d/%b/%Y')
+        return formatted_date
+    
+    except ValueError:
+        return date_str
+    
 # Logger function to append text to the Logger window with a timestamp
 def log(text):
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -109,6 +147,12 @@ while True:
     event, values = window.read()
     if event == sg.WINDOW_CLOSED or event == 'Exit':
         break
+    
+    elif event == '-NIFTY-DATE-':
+        selected_date = values[event]
+        formatted_date = format_date_with_day(selected_date)
+        log(f'expiry date:{formatted_date}')
+        window['-NIFTY-DATE-'].update(formatted_date)  # Update the input field with the selected date
 
     elif event == '-NIFTY-OPTION-':
         selected_option = values['-NIFTY-OPTION-']

@@ -7,10 +7,11 @@ layout = [
         [sg.Tab('NIFTY', [
             # Section 1: Configuration
             [sg.Text('Configuration', font=('Helvetica', 14), relief=sg.RELIEF_RIDGE)],
-            [sg.Text('Select Undelying Instrument:', size=40),  sg.Text('Mode:', size=40, justification='left'), sg.Text('Expiry:', size=40, justification='left')],
+            [sg.Text('Select Instrument (for Level):', size=40),  sg.Text('Mode:', size=40, justification='left'), sg.Text('Expiry:', size=40, justification='left')],
             [sg.Combo(['NIFTY-I', 'NIFTY_INDEX'], key='-NIFTY-OPTION-', default_value='NIFTY-I', enable_events=True, size=(40, 1)), sg.Combo(['MIS', 'NRML'], key='-NIFTY-MODE-', default_value='MIS', enable_events=True, size=(40, 1)), sg.CalendarButton('Pick a Date', target='-NIFTY-DATE-', format='%d/%m/%Y', pad=(10, 10)), sg.InputText('', key='-NIFTY-DATE-', size=(20, 1), enable_events=True)],
-            [sg.Text('Select ATM:', size=40), sg.Text('Select Broker:',size=40)],
+            [sg.Text('Select Moneyness (wrt to Index):', size=40), sg.Text('Premium:',size=20), sg.Text('Select Broker:',size=40)],
             [sg.Combo(['ATM-5', 'ATM-4', 'ATM-3', 'ATM-2', 'ATM-1', 'ATM', 'ATM+1', 'ATM+2', 'ATM+3', 'ATM+4', 'ATM+5'], key='-NIFTY-ATM-', default_value='ATM', size=(40, 1), enable_events=True),
+             sg.InputText('', key='-NIFTY-PREMIUM-',size=(20,1)),
              sg.Combo(['FINVASIA', 'ZERODHA'], key='-BROKER-OPTION-', default_value='FINVASIA', enable_events=True, size=(40, 1))],
 
             [sg.Text('Target Ratios:', size=40)],
@@ -61,14 +62,24 @@ layout = [
             [sg.Button('BN_CE BUY  \u2191', button_color=('white', 'green')), sg.Button('BN_CE SELL \u2193', button_color=('white', 'red'))],  # CE buttons with up and down arrows
             [sg.Button('BN_PE SELL \u2191', button_color=('white', 'green')), sg.Button('BN_PE BUY  \u2193', button_color=('white', 'red')) ],  # PE buttons with up and down arrows
             [sg.Text('', size=(100, 1))]
-        ]),
-        ]
-        
+            ]),
+        ],
+        [sg.Tab('System Config', [[sg.Text('Session ID Configuration (Only one Broker supported)', font=('Helvetica', 14), relief=sg.RELIEF_RIDGE)],
+            [sg.Text('Zerodha Session ID:')], 
+            [sg.InputText('', key='-ZERODHA-SESSION-ID-')],
+            [sg.Text('Finvasia Session ID:')], 
+            [sg.InputText('', key='-FINVASIA-SESSION-ID-')],
+            [sg.Text('Log File Configuration', font=('Helvetica', 14), relief=sg.RELIEF_RIDGE)],
+            [sg.Text('Log File:')], 
+            [sg.InputText('', key='-SYSTEM-LOG-FILE-')],
+            ]),
+        ],
+        [sg.Tab('Disclaimer', [ ]),]
     ])],
     [sg.Text('', size=(100, 1))],
+    [sg.Button('Exit', size=(10, 1))],  # Exit button at the lowest row
     [sg.Text('Logger Window:')],
     [sg.Multiline('', key='-LOGGER-', size=(115, 5))],  # Logger window with a larger size
-    [sg.Button('Exit', size=(10, 1))]  # Exit button at the lowest row
 ]
 
 # Create the window
@@ -176,22 +187,22 @@ while True:
 
     # Handle button clicks and log them
     elif 'NIFTY CE BUY' in event:
-        log('NIFTY CE BUY button clicked')
+        log('NIFTY CE BUY Button Click')
     elif 'NIFTY CE SELL' in event:
-        log('NIFTY CE SELL button clicked')
+        log('NIFTY CE SELL Button Click')
     elif 'NIFTY PE BUY' in event:
-        log('NIFTY PE BUY button clicked')
+        log('NIFTY PE BUY Button Click')
     elif 'NIFTY PE SELL' in event:
-        log('NIFTY PE SELL button clicked')
+        log('NIFTY PE SELL Button Click')
 
     elif 'BN_CE BUY' in event:
-        log('BN CE BUY button clicked')
+        log('BN CE BUY Button clicked')
     elif 'BN_CE SELL' in event:
-        log('BN CE SELL button clicked')
+        log('BN CE SELL Button clicked')
     elif 'BN_PE BUY' in event:
-        log('BN_PE BUY button clicked')
+        log('BN_PE BUY Button clicked')
     elif 'BN_PE SELL' in event:
-        log('BN_PE SELL button clicked')
+        log('BN_PE SELL Button clicked')
 
 
     # Check if the input fields have changed and log their values with a delay

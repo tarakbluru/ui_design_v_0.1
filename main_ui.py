@@ -17,6 +17,7 @@ layout = [
             [sg.InputText('', key='-NIFTY-MAX-PROFIT-')],
             [sg.Button('NIFTY CE BUY  \u2191', button_color=('white', 'green')),  sg.Button('NIFTY CE SELL \u2193', button_color=('white', 'red'))],  # CE buttons with up and down arrows
             [sg.Button('NIFTY PE SELL \u2191', button_color=('white', 'green')),  sg.Button('NIFTY PE BUY  \u2193', button_color=('white', 'red')) ],  # PE buttons with up and down arrows
+            [sg.Text('', size=(100, 1))]
         ])],
         [sg.Tab('Bank Nifty', [
             [sg.Text('Select Option:')],
@@ -31,13 +32,14 @@ layout = [
             [sg.InputText('', key='-BANKNIFTY-MAX-PROFIT-')],
             [sg.Button('BN_CE BUY  \u2191', button_color=('white', 'green')), sg.Button('BN_CE SELL \u2193', button_color=('white', 'red'))],  # CE buttons with up and down arrows
             [sg.Button('BN_PE SELL \u2191', button_color=('white', 'green')), sg.Button('BN_PE BUY  \u2193', button_color=('white', 'red')) ],  # PE buttons with up and down arrows
+            [sg.Text('', size=(100, 1))]
         ]),
         ]
         
     ])],
     [sg.Text('', size=(100, 1))],
     [sg.Text('Logger Window:')],
-    [sg.Multiline('', key='-LOGGER-', size=(100, 10))],  # Logger window with a larger size
+    [sg.Multiline('', key='-LOGGER-', size=(115, 10))],  # Logger window with a larger size
     [sg.Button('Exit', size=(10, 1))]  # Exit button at the lowest row
 ]
 

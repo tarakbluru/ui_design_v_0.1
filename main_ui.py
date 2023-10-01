@@ -22,22 +22,6 @@ def number_with_2_decimal_places(value):
     except ValueError:
         return None
 
-@dataclass
-class Level:
-    text:str
-    key:str
-    msg:str
-    value:float=None
-    cmp_event:str = field(init=False)
-    cmp_focus:str = field(init=False)
-    focus_in: str = field(init=False)
-    focus_out: str = field(init=False)
-
-    def __post_init__(self):
-        self.cmp_event = f'{self.key}_Enter'
-        self.focus_in = f"{self.key}-FOCUS_IN"
-        self.focus_out = f"{self.key}-FOCUS_OUT"
-
 def main ():
     # Define the layout of your GUI
     ul_option = 'NIFTY-I'
@@ -46,9 +30,32 @@ def main ():
     n_alert = None
     n_b_entry = None
     n_s_entry = None
+    n_l_t1 = None
+    n_l_t2 = None
+    n_l_t3 = None
+    n_l_sl = None
 
-    al = Level (text='Alert Level:', key='-NIFTY-ALERT-LEVEL-',msg='Nifty Alert Level')
 
+    n_s_t1 = None
+    n_s_t2 = None
+    n_s_t3 = None
+    n_s_sl = None
+
+    n_sl_at_cost = None
+    n_sl_at_cost_mins = None
+
+    n_trail_level = None
+    n_trail_pts = None
+
+    prev_nifty_qty = None  # Initialize as None
+    prev_nifty_qty_amount = None
+
+    # Initialize variables to store the previous values of the input fields
+    prev_nifty_premium = None
+    prev_max_loss = None  # Initialize as None
+    prev_max_profit = None  # Initialize as None
+    
+    
     layout = [
         [sg.TabGroup([
             [sg.Tab('NIFTY', [
@@ -153,7 +160,10 @@ def main ():
         [sg.Text('', size=(80, 1))],
         [sg.Text('Overall Per Day Max PNL', font=('Helvetica', 14), relief=sg.RELIEF_RIDGE, size=(81,1))],
         [sg.Text('Max Loss:', size=20), sg.Text('Max Profit:', size=20)],
-        [sg.InputText('', key='-MAX-LOSS-',size=20), sg.InputText('', key='-MAX-PROFIT-',size=20), sg.Button('Posn Sq Off', button_color=('white', 'grey'), size=(30,2)), sg.Text('Current Posn:', size=10), sg.Text('', size=9), sg.Text('PnL:', size=10), sg.Text('', size=9)],
+        [sg.InputText('', key='-MAX-LOSS-',size=20), 
+         sg.InputText('', key='-MAX-PROFIT-',size=20), 
+         sg.Button('Posn Sq Off', button_color=('white', 'grey'), size=(30,2), key='-POSITION-SQOFF-', enable_events=True), 
+         sg.Text('Current Posn:', size=10), sg.Text('', size=9), sg.Text('PnL:', size=10), sg.Text('', size=9)],
         [sg.Text('', size=(80, 1))],
         [sg.Text('', size=(80, 1))],
         [sg.Button('App Exit', size=(10, 1))],  # Exit button at the lowest row
@@ -162,7 +172,7 @@ def main ():
     ]
 
     # Create the window
-    window = sg.Window('::UI Ver 0.1::', layout, finalize=True)
+    window = sg.Window('::UI Design Ver 0.1::', layout, finalize=True)
 
     window['-NIFTY-PREMIUM-'].bind("<FocusIn>", "_NIFTY-FOCUS_IN_PREMIUM")
     window['-NIFTY-PREMIUM-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_PREMIUM")
@@ -182,53 +192,79 @@ def main ():
     window['-NIFTY-SHORT-LEVEL-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_S-ENTRY")
     window['-NIFTY-SHORT-LEVEL-'].bind("<Return>", "_Enter")
 
+    window['-NIFTY-LONG-T1-LEVEL-'].bind("<FocusIn>", "_NIFTY-FOCUS_IN_LONG-T1-LEVEL")
+    window['-NIFTY-LONG-T1-LEVEL-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_LONG-T1-LEVEL")
+    window['-NIFTY-LONG-T1-LEVEL-'].bind("<Return>", "_Enter")
+
+    window['-NIFTY-LONG-T2-LEVEL-'].bind("<FocusIn>", "_NIFTY-FOCUS_IN_LONG-T2-LEVEL")
+    window['-NIFTY-LONG-T2-LEVEL-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_LONG-T2-LEVEL")
+    window['-NIFTY-LONG-T2-LEVEL-'].bind("<Return>", "_Enter")
+
+    window['-NIFTY-LONG-T3-LEVEL-'].bind("<FocusIn>", "_NIFTY-FOCUS_IN_LONG-T3-LEVEL")
+    window['-NIFTY-LONG-T3-LEVEL-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_LONG-T3-LEVEL")
+    window['-NIFTY-LONG-T3-LEVEL-'].bind("<Return>", "_Enter")
 
 
+    window['-NIFTY-LONG-SL-LEVEL-'].bind("<FocusIn>", "_NIFTY-FOCUS_IN_LONG-SL-LEVEL")
+    window['-NIFTY-LONG-SL-LEVEL-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_LONG-SL-LEVEL")
+    window['-NIFTY-LONG-SL-LEVEL-'].bind("<Return>", "_Enter")
+
+    window['-NIFTY-SHORT-T1-LEVEL-'].bind("<FocusIn>", "_NIFTY-FOCUS_IN_SHORT-T1-LEVEL")
+    window['-NIFTY-SHORT-T1-LEVEL-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_SHORT-T1-LEVEL")
+    window['-NIFTY-SHORT-T1-LEVEL-'].bind("<Return>", "_Enter")
+
+    window['-NIFTY-SHORT-T2-LEVEL-'].bind("<FocusIn>", "_NIFTY-FOCUS_IN_SHORT-T2-LEVEL")
+    window['-NIFTY-SHORT-T2-LEVEL-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_SHORT-T2-LEVEL")
+    window['-NIFTY-SHORT-T2-LEVEL-'].bind("<Return>", "_Enter")
+
+    window['-NIFTY-SHORT-T3-LEVEL-'].bind("<FocusIn>", "_NIFTY-FOCUS_IN_SHORT-T3-LEVEL")
+    window['-NIFTY-SHORT-T3-LEVEL-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_SHORT-T3-LEVEL")
+    window['-NIFTY-SHORT-T3-LEVEL-'].bind("<Return>", "_Enter")
 
 
+    window['-NIFTY-SHORT-SL-LEVEL-'].bind("<FocusIn>", "_NIFTY-FOCUS_IN_SHORT-SL-LEVEL")
+    window['-NIFTY-SHORT-SL-LEVEL-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_SHORT-SL-LEVEL")
+    window['-NIFTY-SHORT-SL-LEVEL-'].bind("<Return>", "_Enter")
+
+    window['-NIFTY-SL-AT-COST-LEVEL-'].bind("<FocusIn>", "_NIFTY-FOCUS_IN_SL-AT-COST-LEVEL")
+    window['-NIFTY-SL-AT-COST-LEVEL-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_SL-AT-COST-LEVEL")
+    window['-NIFTY-SL-AT-COST-LEVEL-'].bind("<Return>", "_Enter")
 
 
+    window['-NIFTY-SL-AT-COST-AFTER-MINS-'].bind("<FocusIn>", "_NIFTY-FOCUS_IN_SL-AT-COST-AFTER-MINS")
+    window['-NIFTY-SL-AT-COST-AFTER-MINS-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_SL-AT-COST-AFTER-MINS")
+    window['-NIFTY-SL-AT-COST-AFTER-MINS-'].bind("<Return>", "_Enter")
 
+
+    window['-NIFTY-TRAIL-AFTER-LEVEL-'].bind("<FocusIn>", "_NIFTY-FOCUS_IN_SL-TRAIL-AFTER-LEVEL")
+    window['-NIFTY-TRAIL-AFTER-LEVEL-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_SL-TRAIL-AFTER-LEVEL")
+    window['-NIFTY-TRAIL-AFTER-LEVEL-'].bind("<Return>", "_Enter")
+
+
+    window['-NIFTY-TRAIL-BY-PTS-'].bind("<FocusIn>", "_NIFTY-FOCUS_IN_TRAIL-BY-PTS")
+    window['-NIFTY-TRAIL-BY-PTS-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_TRAIL-BY-PTS")
+    window['-NIFTY-TRAIL-BY-PTS-'].bind("<Return>", "_Enter")
 
     window['-NIFTY-QTY-LOTS-'].bind("<FocusIn>", "_NIFTY-FOCUS_IN_QTY")
     window['-NIFTY-QTY-LOTS-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_QTY")
     window['-NIFTY-QTY-LOTS-'].bind("<Return>", "_Enter")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    window['-NIFTY-QTY-AMOUNT-'].bind("<FocusIn>", "_NIFTY-FOCUS_IN_QTY-AMOUNT-")
+    window['-NIFTY-QTY-AMOUNT-'].bind("<FocusOut>", "_NIFTY-FOCUS_OUT_QTY-AMOUNT")
+    window['-NIFTY-QTY-AMOUNT-'].bind("<Return>", "_Enter")
 
 
     window['-MAX-LOSS-'].bind("<Return>", "_Enter")
-    window['-MAX-LOSS-'].bind("<FocusOut>", "_NIFTY-FOCUS_MAX_LOSS")
+    window['-MAX-LOSS-'].bind("<FocusOut>", "_OVERALL-FOCUS_OUT_MAX_LOSS")
 
     window['-MAX-PROFIT-'].bind("<Return>", "_Enter")
-    window['-MAX-PROFIT-'].bind("<FocusOut>", "_NIFTY-FOCUS_MAX_PROFIT")
+    window['-MAX-PROFIT-'].bind("<FocusOut>", "_OVERALL-FOCUS_OUT_MAX_PROFIT")
 
     window['-BANKNIFTY-QTY-LOTS-'].bind("<FocusIn>", "_BANKNIFTY-FOCUS_IN_QTY")
     window['-BANKNIFTY-QTY-LOTS-'].bind("<FocusOut>", "_BANKNIFTY-FOCUS_OUT_QTY")
     window['-BANKNIFTY-QTY-LOTS-'].bind("<Return>", "_Enter")
 
-
-    # Initialize variables to store the previous values of the input fields
-    prev_nifty_premium = None
-    prev_nifty_qty = None  # Initialize as None
-    prev_nifty_max_loss = None  # Initialize as None
-    prev_nifty_max_profit = None  # Initialize as None
-    prev_banknifty_qty = None  # Initialize as None
-    prev_banknifty_max_loss = None  # Initialize as None
-    prev_banknifty_max_profit = None  # Initialize as None
 
     # Function to format a date with the day of the week
     def format_date_with_day(date_str):
@@ -377,74 +413,214 @@ def main ():
                 n_s_entry = None
 
         cmp_event = '-NIFTY-LONG-T1-LEVEL-'
-        focus = '_NIFTY-FOCUS_OUT_S-ENTRY'
+        focus = '_NIFTY-FOCUS_OUT_LONG-T1-LEVEL'
         log_mesg = 'Long T1 Level'
         
         if (event == cmp_event + "_Enter") or (event == cmp_event + focus):
             if values[cmp_event] == '':
-                n_s_entry = None
+                n_l_t1 = None
             elif number_with_2_decimal_places(values[cmp_event]) is not None:
-                tmp = n_s_entry
-                n_s_entry = round(float(values[cmp_event]), 2)
-                if tmp != n_s_entry:
-                    log(f"Nifty {log_mesg} changed: {n_s_entry}")
-                window[cmp_event].update(n_s_entry)
+                tmp = n_l_t1
+                n_l_t1 = round(float(values[cmp_event]), 2)
+                if tmp != n_l_t1:
+                    log(f"Nifty {log_mesg} changed: {n_l_t1}")
+                window[cmp_event].update(n_l_t1)
             else:
                 window[cmp_event].update('')
-                n_s_entry = None
+                n_l_t1 = None
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        if event == '-BANKNIFTY-OPTION-':
-            selected_option = values['-BANKNIFTY-OPTION-']
-            log(f'Bank Nifty Option Selected: {selected_option}')
-            window['-BANKNIFTY-OPTION-'].update(selected_option)
+        cmp_event = '-NIFTY-LONG-T2-LEVEL-'
+        focus = '_NIFTY-FOCUS_OUT_LONG-T2-LEVEL'
+        log_mesg = 'Long T2 Level'
         
-        elif event == '-NIFTY-ATM-':
-            selected_atm = values['-NIFTY-ATM-']
-            log(f'NIFTY ATM Selected: {selected_atm}')
-            window['-NIFTY-ATM-'].update(selected_atm)
+        if (event == cmp_event + "_Enter") or (event == cmp_event + focus):
+            if values[cmp_event] == '':
+                n_l_t2 = None
+            elif number_with_2_decimal_places(values[cmp_event]) is not None:
+                tmp = n_l_t2
+                n_l_t2 = round(float(values[cmp_event]), 2)
+                if tmp != n_l_t2:
+                    log(f"Nifty {log_mesg} changed: {n_l_t2}")
+                window[cmp_event].update(n_l_t2)
+            else:
+                window[cmp_event].update('')
+                n_l_t2 = None
+
+        cmp_event = '-NIFTY-LONG-T3-LEVEL-'
+        focus = '_NIFTY-FOCUS_OUT_LONG-T3-LEVEL'
+        log_mesg = 'Long T3 Level'
         
-        elif event == '-BANKNIFTY-ATM-':
-            selected_atm = values['-BANKNIFTY-ATM-']
-            log(f'Bank Nifty ATM Selected: {selected_atm}')
-            window['-BANKNIFTY-ATM-'].update(selected_atm)    
+        if (event == cmp_event + "_Enter") or (event == cmp_event + focus):
+            if values[cmp_event] == '':
+                n_l_t3 = None
+            elif number_with_2_decimal_places(values[cmp_event]) is not None:
+                tmp = n_l_t3
+                n_l_t3 = round(float(values[cmp_event]), 2)
+                if tmp != n_l_t3:
+                    log(f"Nifty {log_mesg} changed: {n_l_t3}")
+                window[cmp_event].update(n_l_t3)
+            else:
+                window[cmp_event].update('')
+                n_l_t3 = None
 
-        elif event == '-NIFTY-CE-BUY-':
-            log('NIFTY CE BUY Button Click')
-        elif event == '-NIFTY-CE-SELL-':
-            log('NIFTY CE SELL Button Click')
-        elif event == '-NIFTY-PE-BUY-':
-            log('NIFTY PE BUY Button Click')
-        elif event == '-NIFTY-PE-SELL-':
-            log('NIFTY PE SELL Button Click')
+        cmp_event = '-NIFTY-LONG-SL-LEVEL-'
+        focus = '_NIFTY-FOCUS_OUT_LONG-SL-LEVEL'
+        log_mesg = 'Long SL Level'
+        
+        if (event == cmp_event + "_Enter") or (event == cmp_event + focus):
+            if values[cmp_event] == '':
+                n_l_sl = None
+            elif number_with_2_decimal_places(values[cmp_event]) is not None:
+                tmp = n_l_sl
+                n_l_sl = round(float(values[cmp_event]), 2)
+                if tmp != n_l_sl:
+                    log(f"Nifty {log_mesg} changed: {n_l_sl}")
+                window[cmp_event].update(n_l_sl)
+            else:
+                window[cmp_event].update('')
+                n_l_t3 = None
 
-        elif event == '-BANKNIFTY-CE-BUY-':
-            log('BANKNIFTY CE BUY Button Click')
-        elif event == '-BANKNIFTY-CE-SELL-':
-            log('BANKNIFTY CE SELL Button Click')
-        elif event == '-BANKNIFTY-PE-BUY-':
-            log('BANKNIFTY PE BUY Button Click')
-        elif event == '-BANKNIFTY-PE-SELL-':
-            log('BANKNIFTY PE SELL Button Click')
+
+        cmp_event = '-NIFTY-SHORT-T1-LEVEL-'
+        focus = '_NIFTY-FOCUS_OUT_SHORT-T1-LEVEL'
+        log_mesg = 'Short T1 Level'
+        
+        if (event == cmp_event + "_Enter") or (event == cmp_event + focus):
+            if values[cmp_event] == '':
+                n_s_t1 = None
+            elif number_with_2_decimal_places(values[cmp_event]) is not None:
+                tmp = n_s_t1
+                n_s_t1 = round(float(values[cmp_event]), 2)
+                if tmp != n_s_t1:
+                    log(f"Nifty {log_mesg} changed: {n_s_t1}")
+                window[cmp_event].update(n_s_t1)
+            else:
+                window[cmp_event].update('')
+                n_s_t1 = None
+
+        cmp_event = '-NIFTY-SHORT-T2-LEVEL-'
+        focus = '_NIFTY-FOCUS_OUT_SHORT-T2-LEVEL'
+        log_mesg = 'Short T2 Level'
+        
+        if (event == cmp_event + "_Enter") or (event == cmp_event + focus):
+            if values[cmp_event] == '':
+                n_s_t2 = None
+            elif number_with_2_decimal_places(values[cmp_event]) is not None:
+                tmp = n_s_t2
+                n_s_t2 = round(float(values[cmp_event]), 2)
+                if tmp != n_s_t2:
+                    log(f"Nifty {log_mesg} changed: {n_s_t2}")
+                window[cmp_event].update(n_s_t2)
+            else:
+                window[cmp_event].update('')
+                n_s_t2 = None
+
+        cmp_event = '-NIFTY-SHORT-T3-LEVEL-'
+        focus = '_NIFTY-FOCUS_OUT_SHORT-T3-LEVEL'
+        log_mesg = 'Short T3 Level'
+        
+        if (event == cmp_event + "_Enter") or (event == cmp_event + focus):
+            if values[cmp_event] == '':
+                n_s_t3 = None
+            elif number_with_2_decimal_places(values[cmp_event]) is not None:
+                tmp = n_s_t3
+                n_s_t3 = round(float(values[cmp_event]), 2)
+                if tmp != n_s_t3:
+                    log(f"Nifty {log_mesg} changed: {n_s_t3}")
+                window[cmp_event].update(n_s_t3)
+            else:
+                window[cmp_event].update('')
+                n_s_t3 = None
+
+        cmp_event = '-NIFTY-SHORT-SL-LEVEL-'
+        focus = '_NIFTY-FOCUS_OUT_SHORT-SL-LEVEL'
+        log_mesg = 'Short SL Level'
+        
+        if (event == cmp_event + "_Enter") or (event == cmp_event + focus):
+            if values[cmp_event] == '':
+                n_s_sl = None
+            elif number_with_2_decimal_places(values[cmp_event]) is not None:
+                tmp = n_s_sl
+                n_s_sl = round(float(values[cmp_event]), 2)
+                if tmp != n_s_sl:
+                    log(f"Nifty {log_mesg} changed: {n_s_sl}")
+                window[cmp_event].update(n_s_sl)
+            else:
+                window[cmp_event].update('')
+                n_s_sl = None
+
+        cmp_event = '-NIFTY-SL-AT-COST-LEVEL-'
+        focus = '_NIFTY-FOCUS_OUT_SL-AT-COST-LEVEL'
+        log_mesg = 'SL At Cost after moving Points:'
+        
+        if (event == cmp_event + "_Enter") or (event == cmp_event + focus):
+            if values[cmp_event] == '':
+                n_sl_at_cost = None
+            elif number_with_2_decimal_places(values[cmp_event]) is not None:
+                tmp = n_sl_at_cost
+                n_sl_at_cost = round(float(values[cmp_event]), 2)
+                if tmp != n_sl_at_cost:
+                    log(f"Nifty {log_mesg} changed: {n_sl_at_cost}")
+                window[cmp_event].update(n_sl_at_cost)
+            else:
+                window[cmp_event].update('')
+                n_sl_at_cost = None
+
+
+        cmp_event = '-NIFTY-SL-AT-COST-AFTER-MINS-'
+        focus = '_NIFTY-FOCUS_OUT_SL-AT-COST-AFTER-MINS'
+        log_mesg = 'SL At Cost after this time '
+        
+        if (event == cmp_event + "_Enter") or (event == cmp_event + focus):
+            if values[cmp_event] == '':
+                n_sl_at_cost_mins = None
+            elif number_with_2_decimal_places(values[cmp_event]) is not None:
+                tmp = n_sl_at_cost_mins
+                n_sl_at_cost_mins = round(float(values[cmp_event]), 2)
+                if tmp != n_sl_at_cost_mins:
+                    log(f"Nifty {log_mesg} changed: {n_sl_at_cost_mins}")
+                window[cmp_event].update(n_sl_at_cost_mins)
+            else:
+                window[cmp_event].update('')
+                n_sl_at_cost_mins = None
+
+        cmp_event = '-NIFTY-TRAIL-AFTER-LEVEL-'
+        focus = '_NIFTY-FOCUS_OUT_SL-TRAIL-AFTER-LEVEL'
+        log_mesg = 'Trail after this Level'
+        
+        if (event == cmp_event + "_Enter") or (event == cmp_event + focus):
+            if values[cmp_event] == '':
+                n_trail_level = None
+            elif number_with_2_decimal_places(values[cmp_event]) is not None:
+                tmp = n_trail_level
+                n_trail_level = round(float(values[cmp_event]), 2)
+                if tmp != n_trail_level:
+                    log(f"Nifty {log_mesg} changed: {n_trail_level}")
+                window[cmp_event].update(n_trail_level)
+            else:
+                window[cmp_event].update('')
+                n_trail_level = None
+
+        cmp_event = '-NIFTY-TRAIL-BY-PTS-'
+        focus = '_NIFTY-FOCUS_OUT_TRAIL-BY-PTS'
+        log_mesg = 'Trail by pts'
+        
+        if (event == cmp_event + "_Enter") or (event == cmp_event + focus):
+            if values[cmp_event] == '':
+                n_trail_pts = None
+            elif number_with_2_decimal_places(values[cmp_event]) is not None:
+                tmp = n_trail_pts
+                n_trail_pts = round(float(values[cmp_event]), 2)
+                if tmp != n_trail_pts:
+                    log(f"Nifty {log_mesg} changed: {n_trail_pts}")
+                window[cmp_event].update(n_trail_pts)
+            else:
+                window[cmp_event].update('')
+                n_trail_pts = None
+
 
         # Check if the input fields have changed and log their values with a delay
-        elif (event == '-NIFTY-QTY-LOTS-' + "_Enter") or (event == '-NIFTY-QTY-LOTS-' + "_NIFTY-FOCUS_OUT_QTY"):
+        if (event == '-NIFTY-QTY-LOTS-' + "_Enter") or (event == '-NIFTY-QTY-LOTS-' + "_NIFTY-FOCUS_OUT_QTY"):
             if values['-NIFTY-QTY-LOTS-'] == '':
                 prev_nifty_qty = None
             elif (integer(values["-NIFTY-QTY-LOTS-"])) is not None:
@@ -458,76 +634,62 @@ def main ():
                 window["-NIFTY-QTY-LOTS-"].update('')
                 prev_nifty_qty = None  # Reset prev_qty to None
 
-        # Check if the input fields have changed and log their values when focus out event occurs
-        elif (event == '-NIFTY-MAX-LOSS-' + "_Enter") or (event == '-NIFTY-MAX-LOSS-' + "_NIFTY-FOCUS_MAX_LOSS"):
-            
-            if values['-NIFTY-MAX-LOSS-'] == '':
-                prev_nifty_max_loss = None
-            elif number_with_2_decimal_places(values['-NIFTY-MAX-LOSS-']) is not None:
-                tmp = prev_nifty_max_loss
-                prev_nifty_max_loss = round(float(values['-NIFTY-MAX-LOSS-']), 2)
-                if tmp != prev_nifty_max_loss:
-                    log(f"Nifty Max Loss changed: {prev_nifty_max_loss}")
-                window['-NIFTY-MAX-LOSS-'].update(prev_nifty_max_loss)
-            else:
-                window['-NIFTY-MAX-LOSS-'].update('')
-                prev_nifty_max_loss = None
-
-        elif (event == '-NIFTY-MAX-PROFIT-' + "_Enter" or (event == '-NIFTY-MAX-PROFIT-' + "_NIFTY-FOCUS_MAX_PROFIT")):
-            if values['-NIFTY-MAX-PROFIT-'] == '':
-                prev_nifty_max_profit = None
-            elif number_with_2_decimal_places(values['-NIFTY-MAX-PROFIT-']) is not None:
-                tmp = prev_nifty_max_profit
-                prev_nifty_max_profit = round(float(values['-NIFTY-MAX-PROFIT-']), 2)
-                if tmp != prev_nifty_max_profit:
-                    log(f"Nifty Max Profit changed: {prev_nifty_max_profit}")
-                window['-NIFTY-MAX-PROFIT-'].update(prev_nifty_max_profit)
-            else:
-                window['-NIFTY-MAX-PROFIT-'].update('')
-                prev_nifty_max_profit = None
 
         # Check if the input fields have changed and log their values with a delay
-        elif (event == '-BANKNIFTY-QTY-' + "_Enter") or (event == '-BANKNIFTY-QTY-' + "_BANKNIFTY-FOCUS_OUT_QTY"):
-            if values['-BANKNIFTY-QTY-'] == '':
-                prev_banknifty_qty = None
-            elif (integer(values["-BANKNIFTY-QTY-"])) is not None:
-                tmp  = prev_banknifty_qty
-                prev_banknifty_qty = round(float(values['-BANKNIFTY-QTY-']))
-                if tmp != prev_banknifty_qty:
-                    log(f"Bank Qty changed: {prev_banknifty_qty}")
-                    window["-BANKNIFTY-QTY-"].update(prev_banknifty_qty)  # Update the input field with the rounded value
+        if (event == '-NIFTY-QTY-AMOUNT-' + "_Enter") or (event == '-NIFTY-QTY-AMOUNT-' + "_NIFTY-FOCUS_OUT_QTY-AMOUNT"):
+            if values['-NIFTY-QTY-AMOUNT-'] == '':
+                prev_nifty_qty_amount = None
+            elif (integer(values["-NIFTY-QTY-AMOUNT-"])) is not None:
+                tmp  = prev_nifty_qty_amount
+                prev_nifty_qty_amount = round(float(values['-NIFTY-QTY-AMOUNT-']))
+                if tmp != prev_nifty_qty_amount:
+                    log(f"Nifty Qty changed: {prev_nifty_qty_amount}")
+                    window["-NIFTY-QTY-AMOUNT-"].update(prev_nifty_qty_amount)  # Update the input field with the rounded value
             else:
                 # User entered a non-integer value, so blank the QTY input box
-                window["-BANKNIFTY-QTY-"].update('')
-                prev_banknifty_qty = None  # Reset prev_qty to None
+                window["-NIFTY-QTY-AMOUNT-"].update('')
+                prev_nifty_qty_amount = None  # Reset prev_qty to None
 
-        # Check if the input fields have changed and log their values when focus out event occurs
-        elif (event == '-BANKNIFTY-MAX-LOSS-' + "_Enter") or (event == '-BANKNIFTY-MAX-LOSS-' + "_BANKNIFTY-FOCUS_MAX_LOSS"):
+
+        if event == '-NIFTY-CE-BUY-':
+            log('NIFTY CE BUY Button Click')
+        if event == '-NIFTY-CE-SELL-':
+            log('NIFTY CE SELL Button Click')
+        if event == '-NIFTY-PE-BUY-':
+            log('NIFTY PE BUY Button Click')
+        if event == '-NIFTY-PE-SELL-':
+            log('NIFTY PE SELL Button Click')
+
+        if event == '-POSITION-SQOFF-':
+            log('Position Sq offf Click')
+
+        if (event == '-MAX-LOSS-' + "_Enter") or (event == '-MAX-LOSS-' + "_OVERALL-FOCUS_OUT_MAX_LOSS"):
             
-            if values['-BANKNIFTY-MAX-LOSS-'] == '':
-                prev_banknifty_max_loss = None
-            elif number_with_2_decimal_places(values['-BANKNIFTY-MAX-LOSS-']) is not None:
-                tmp = prev_banknifty_max_loss
-                prev_banknifty_max_loss = round(float(values['-BANKNIFTY-MAX-LOSS-']), 2)
-                if tmp != prev_banknifty_max_loss:
-                    log(f"BANKNifty Max Loss changed: {prev_banknifty_max_loss}")
-                window['-BANKNIFTY-MAX-LOSS-'].update(prev_banknifty_max_loss)
+            if values['-MAX-LOSS-'] == '':
+                prev_max_loss = None
+            elif number_with_2_decimal_places(values['-MAX-LOSS-']) is not None:
+                tmp = prev_max_loss
+                prev_max_loss = round(float(values['-MAX-LOSS-']), 2)
+                if tmp != prev_max_loss:
+                    log(f"Nifty Max Loss changed: {prev_max_loss}")
+                window['-MAX-LOSS-'].update(prev_max_loss)
             else:
-                window['-BANKNIFTY-MAX-LOSS-'].update('')
-                prev_banknifty_max_loss = None
+                window['-NIFTY-MAX-LOSS-'].update('')
+                prev_max_loss = None
 
-        elif (event == '-BANKNIFTY-MAX-PROFIT-' + "_Enter" or (event == '-BANKNIFTY-MAX-PROFIT-' + "_BANKNIFTY-FOCUS_MAX_PROFIT")):
-            if values['-BANKNIFTY-MAX-PROFIT-'] == '':
-                prev_banknifty_max_profit = None
-            elif number_with_2_decimal_places(values['-BANKNIFTY-MAX-PROFIT-']) is not None:
-                tmp = prev_banknifty_max_profit
-                prev_banknifty_max_profit = round(float(values['-BANKNIFTY-MAX-PROFIT-']), 2)
-                if tmp != prev_banknifty_max_profit:
-                    log(f"Bank Nifty Max Profit changed: {prev_banknifty_max_profit}")
-                window['-BANKNIFTY-MAX-PROFIT-'].update(prev_banknifty_max_profit)
+        if (event == '-MAX-PROFIT-' + "_Enter") or (event == '-MAX-PROFIT-' + "_OVERALL-FOCUS_OUT_MAX_PROFIT"):
+            if values['-MAX-PROFIT-'] == '':
+                prev_max_profit = None
+            elif number_with_2_decimal_places(values['-MAX-PROFIT-']) is not None:
+                tmp = prev_max_profit
+                prev_max_profit = round(float(values['-MAX-PROFIT-']), 2)
+                if tmp != prev_max_profit:
+                    log(f"Max Profit changed: {prev_max_profit}")
+                window['-MAX-PROFIT-'].update(prev_max_profit)
             else:
-                window['-BANKNIFTY-MAX-PROFIT-'].update('')
-                prev_banknifty_max_profit = None
+                window['-MAX-PROFIT-'].update('')
+                prev_max_profit = None
+
 
     # Close the window
     window.close()
